@@ -16,6 +16,7 @@ if bpy.context.object != None:
 bpy.ops.object.select_all(action='SELECT')
 ###delte all objects in the scene
 bpy.ops.object.delete()
+bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
 
 ###get the parent directory path
 path = dirname(dirname(__file__))
@@ -42,17 +43,18 @@ else:
 with open(fullPath,'r') as file:
     jsonRes = json.load(file)
 
-bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
-
-
 ###get the dates' weekdays in order
 ###get the basic temps
 weekdays = []
 allDays = []
 allNights = []
+mat_names = []
 for x in jsonRes:
     dayTemp = jsonRes[x]['times']['all_day']['temperature']['value']
     nightTemp = jsonRes[x]['times']['all_night']['temperature']['value']
+    mats = [jsonRes[x]['times']['all_day']['color']['value'],
+    jsonRes[x]['times']['all_night']['color']['value']]
+    mat_name.append(mats)
     allDays.append(dayTemp)
     allNights.append(nightTemp)
     x = x.split('-')
@@ -62,14 +64,11 @@ for x in jsonRes:
     wd = datetime.date(year,month,day)
     weekdays.append(wd.strftime("%A"))
 
-for i in range(7):
-    print(allDays[i])
-    print(allNights[i])
 ###create, set the body and store the text objects
 textObjs = []    
 for i in range(7):
     bpy.ops.object.text_add()
-    bpy.ops.transform.resize(value=(0.8,0.8,0.8))
+    bpy.ops.transform.resize(value=(0.65,0.65,0.65))
     textObj = bpy.context.object
     textObj.data.body = weekdays[i]
     textObj.data.align_x = 'CENTER'
@@ -82,25 +81,31 @@ bpy.data.scenes['Scene'].render.resolution_y = 1920
 ###create, store, rotate and place the camera
 bpy.ops.object.camera_add()
 camera = bpy.context.scene.objects['Camera']
+camera.data.type = 'ORTHO'
+camera.data.ortho_scale = 23.7
 camera.rotation_euler[0] = radians(0)
 camera.location[2] = 30
 
 ###fixed locations for the circles
-circle_locations = [[0,8,0],
+circle_locations = [[0,9,0],
 [-3,4.5,0],
 [3,4.5,0],
 [-3,0,0],
 [3,0,0],
 [-3,-4.5,0],
 [3,-4.5,0]]
+###nights locations
+nights_loc = [-1.18,-1.23]
+night_inner = [1.15,1.18]
+night_inner_scale = (0.676,0.676,0.676)
+
 
 circles = []
 ###import the circle object
-bpy.ops.wm.obj_import(filepath=path+'/objs/test_proj.obj')
+bpy.ops.wm.obj_import(filepath=path+'/objs/Night_Day_Circle.obj')
 ###store the circle object
 circle = bpy.context.object
-###set the origin to the geometry
-bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
+
 ###set a default position (due to me forgeting to set the origin and location before the export)
 circle.location = [0,0,0]
 ###append into array
@@ -110,12 +115,52 @@ for i in range(6):
     bpy.ops.object.duplicate(linked=False)
     new_circle = bpy.context.object
     circles.append(new_circle)
-    
+
+#inner_circles = []
+####import the circle object
+#bpy.ops.wm.obj_import(filepath=path+'/objs/Night_Day_Circle_Inner.obj')
+####store the circle object
+#inner_circle = bpy.context.object
+
+####set a default position (due to me forgeting to set the origin and location before the export)
+#inner_circle.location = [0,0,0]
+####append into array
+#inner_circles.append(circle)
+
+#for i in range(6):
+#    bpy.ops.object.duplicate(linked=False)
+#    new_circle = bpy.context.object
+#    inner_circles.append(new_circle)
+
+
+###place circles and append material to them (NOTE NO MAT SLOTS IS PREFERED)
 for i in range(7):
+    material = bpy.data.materials.get('Circle_Mat')
     circles[i].location = circle_locations[i]
+    circles[i].data.materials.append(material)
     
 for i in range(int(7)):
-    plh = circle_locations
-    plh[i][1] += 1.3
-    textObjs[i].location = plh[i]
+    textObjs[i].location = circle_locations[i]
+    textObjs[i].location[1] += 1.3
 ###create and do the same thing to the other circles
+
+for i in range(7):
+    bpy.ops.object.text_add()
+    tempObj = bpy.context.object
+    tempObj.data.body = str(allDays[i])
+    tempObj.data.align_x = 'CENTER'
+    tempObj.data.align_y = 'CENTER'
+    tempObj.location = circle_locations[i]
+    
+for i in range(7):
+    bpy.ops.object.text_add()
+    tempObj = bpy.context.object
+    tempObj.data.body = str(allNights[i])
+    tempObj.data.align_x = 'CENTER'
+    tempObj.data.align_y = 'CENTER'
+    tempObj.location = circle_locations[i]
+    tempObj.location[0] += nights_loc[0]
+    tempObj.location[1] += nights_loc[1]
+    tempObj.scale = [0.8,0.8,0.8]
+    
+bpy.ops.object.light_add(type='SUN')
