@@ -1,3 +1,4 @@
+
 import bpy
 import json
 import requests
@@ -54,7 +55,7 @@ for x in jsonRes:
     nightTemp = jsonRes[x]['times']['all_night']['temperature']['value']
     mats = [jsonRes[x]['times']['all_day']['color']['value'],
     jsonRes[x]['times']['all_night']['color']['value']]
-    mat_name.append(mats)
+    mat_names.append(mats)
     allDays.append(dayTemp)
     allNights.append(nightTemp)
     x = x.split('-')
@@ -96,9 +97,12 @@ circle_locations = [[0,9,0],
 [3,-4.5,0]]
 ###nights locations
 nights_loc = [-1.18,-1.23]
-night_inner = [1.15,1.18]
-night_inner_scale = (0.676,0.676,0.676)
+night_inner_loc = [1.15,1.18]
+night_inner_scale = (0.629,0.629,0.629)
 
+##############
+#MAIN CIRCLES#
+##############
 
 circles = []
 ###import the circle object
@@ -116,29 +120,63 @@ for i in range(6):
     new_circle = bpy.context.object
     circles.append(new_circle)
 
-#inner_circles = []
-####import the circle object
-#bpy.ops.wm.obj_import(filepath=path+'/objs/Night_Day_Circle_Inner.obj')
-####store the circle object
-#inner_circle = bpy.context.object
+###############
+#INNER CIRCLES#
+###############
 
-####set a default position (due to me forgeting to set the origin and location before the export)
-#inner_circle.location = [0,0,0]
-####append into array
-#inner_circles.append(circle)
+inner_circles = []
+###import the circle object
+bpy.ops.wm.obj_import(filepath=path+'/objs/Night_Day_Circle_Inner.obj')
+###store the circle object
+inner_circle = bpy.context.object
 
-#for i in range(6):
-#    bpy.ops.object.duplicate(linked=False)
-#    new_circle = bpy.context.object
-#    inner_circles.append(new_circle)
+###set a default position (due to me forgeting to set the origin and location before the export)
+inner_circle.location = [0,0,0]
+###append into array
+inner_circles.append(inner_circle)
+
+for i in range(6):
+    bpy.ops.object.duplicate(linked=False)
+    new_circle = bpy.context.object
+    inner_circles.append(new_circle)
+
+#####################
+#INNER NIGHT CIRCLES#
+#####################
+
+inner_circles_night = []
+###import the circle object
+bpy.ops.wm.obj_import(filepath=path+'/objs/Night_Day_Circle_Inner.obj')
+###store the circle object
+inner_circle_night = bpy.context.object
+
+###set a default position (due to me forgeting to set the origin and location before the export)
+inner_circle_night.location = [0,0,0]
+###append into array
+inner_circles_night.append(inner_circle_night)
+
+for i in range(6):
+    bpy.ops.object.duplicate(linked=False)
+    new_circle = bpy.context.object
+    inner_circles_night.append(new_circle)
 
 
 ###place circles and append material to them (NOTE NO MAT SLOTS IS PREFERED)
 for i in range(7):
+    ###MAIN CIRCLES
     material = bpy.data.materials.get('Circle_Mat')
     circles[i].location = circle_locations[i]
     circles[i].data.materials.append(material)
-    
+    ###MAIN INNER CIRCLES
+    inner_circles[i].location = circle_locations[i]
+    inner_circles[i].location[2] -= 0.01
+    ###NIGHT INNER CIRCLES
+    inner_circles_night[i].location = circle_locations[i]
+    inner_circles_night[i].scale = night_inner_scale
+    inner_circles_night[i].location[0] -= night_inner_loc[0]
+    inner_circles_night[i].location[1] -= night_inner_loc[1]
+    inner_circles_night[i].location[2] -= 0.1
+        
 for i in range(int(7)):
     textObjs[i].location = circle_locations[i]
     textObjs[i].location[1] += 1.3
