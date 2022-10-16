@@ -82,10 +82,10 @@ bpy.data.scenes['Scene'].render.resolution_y = 1920
 ###create, store, rotate and place the camera
 bpy.ops.object.camera_add()
 camera = bpy.context.scene.objects['Camera']
-camera.data.type = 'ORTHO'
+#camera.data.type = 'ORTHO'
 camera.data.ortho_scale = 23.7
 camera.rotation_euler[0] = radians(0)
-camera.location[2] = 30
+camera.location[2] = 32
 
 ###fixed locations for the circles
 circle_locations = [[0,9,0],
@@ -97,8 +97,8 @@ circle_locations = [[0,9,0],
 [3,-4.5,0]]
 ###nights locations
 nights_loc = [-1.18,-1.23]
-night_inner_loc = [1.15,1.18]
-night_inner_scale = (0.629,0.629,0.629)
+night_inner_loc = [1.14734,1.1756]
+night_inner_scale = (0.602,0.602,0.602)
 
 ##############
 #MAIN CIRCLES#
