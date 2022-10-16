@@ -1,4 +1,5 @@
 
+from pickle import FALSE
 import bpy
 import json
 import requests
@@ -65,16 +66,6 @@ for x in jsonRes:
     wd = datetime.date(year,month,day)
     weekdays.append(wd.strftime("%A"))
 
-###create, set the body and store the text objects
-textObjs = []    
-for i in range(7):
-    bpy.ops.object.text_add()
-    bpy.ops.transform.resize(value=(0.65,0.65,0.65))
-    textObj = bpy.context.object
-    textObj.data.body = weekdays[i]
-    textObj.data.align_x = 'CENTER'
-    textObjs.append(textObj)
-
 ###set the render resolution
 bpy.data.scenes['Scene'].render.resolution_x = 1080
 bpy.data.scenes['Scene'].render.resolution_y = 1920
@@ -95,110 +86,207 @@ circle_locations = [[0,9,0],
 [3,0,0],
 [-3,-4.5,0],
 [3,-4.5,0]]
-###nights locations
-nights_loc = [-1.18,-1.23]
-night_inner_loc = [1.14734,1.1756]
-night_inner_scale = (0.602,0.602,0.602)
+###weekday text properties
+weekday_text_loc_y = 1.38496
+weekday_text_scale = [0.835,0.835,0.835]
+###night text properties
+night_text_loc = [-1.11195,-1.19667,0.0]
+night_text_scale = [0.637,0.637,0.637]
+###objects arrays
+weekdays_texts = []
+day_texts = []
+night_texts = []
+circles_outer_day = []
+circles_inner_day = []
+circles_outer_night = []
+circles_inner_night = []
 
-##############
-#MAIN CIRCLES#
-##############
+###import outer day circles
+bpy.ops.wm.obj_import(filepath=path+'/weekday_objs/circle_outer_day.obj')
+circle_outer_day_main = bpy.context.object
+circles_outer_day.append(circle_outer_day_main)
+###import inner day circles
+bpy.ops.wm.obj_import(filepath=path+'/weekday_objs/circle_inner_day.obj')
+circle_inner_day_main = bpy.context.object
+circles_inner_day.append(circle_inner_day_main)
+###import outer night circles
+bpy.ops.wm.obj_import(filepath=path+'/weekday_objs/circle_outer_night.obj')
+circle_outer_night_main = bpy.context.object
+circles_outer_night.append(circle_outer_night_main)
+###import inner night circles
+bpy.ops.wm.obj_import(filepath=path+'/weekday_objs/circle_inner_night.obj')
+circle_inner_night_main = bpy.context.object
+circles_inner_night.append(circle_inner_night_main)
+###create the texts
+bpy.ops.object.text_add()
+weekday_text = bpy.context.object
+weekday_text.data.body = 'WEEKDAY'
+weekday_text.data.align_x = 'CENTER'
+weekday_text.name = 'weekday_text'
+weekdays_texts.append(weekday_text)
+###create day text
+bpy.ops.object.text_add()
+day_text = bpy.context.object
+day_text.data.align_x = 'CENTER'
+day_text.data.align_y = 'CENTER'
+day_text.data.body = '88'
+day_text.name = 'day_text'
+bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
+day_texts.append(day_text)
+###create night text
+bpy.ops.object.text_add()
+night_text = bpy.context.object
+night_text.data.body = '88'
+night_text.data.align_x = 'CENTER'
+night_text.data.align_y = 'CENTER'
+night_text.name = 'night_text'
+bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
+night_texts.append(night_text)
 
-circles = []
-###import the circle object
-bpy.ops.wm.obj_import(filepath=path+'/objs/Night_Day_Circle.obj')
-###store the circle object
-circle = bpy.context.object
+###mian loc prep
+circle_outer_day_main.location = circle_locations[0]
+circle_inner_day_main.location = circle_locations[0]
+circle_outer_night_main.location = circle_locations[0]
+circle_inner_night_main.location = circle_locations[0]
+day_text.location = circle_locations[0]
 
-###set a default position (due to me forgeting to set the origin and location before the export)
-circle.location = [0,0,0]
-###append into array
-circles.append(circle)
-
-for i in range(6):
-    bpy.ops.object.duplicate(linked=False)
-    new_circle = bpy.context.object
-    circles.append(new_circle)
+weekday_text.location = circle_locations[0]
+weekday_text.location[1] += weekday_text_loc_y
+weekday_text.scale = weekday_text_scale
+night_text.location = circle_locations[0]
+night_text.location[0] += night_text_loc[0]
+night_text.location[1] += night_text_loc[1]
+night_text.scale = night_text_scale
 
 ###############
-#INNER CIRCLES#
+#DUPING BEGINS#
 ###############
 
-inner_circles = []
-###import the circle object
-bpy.ops.wm.obj_import(filepath=path+'/objs/Night_Day_Circle_Inner.obj')
-###store the circle object
-inner_circle = bpy.context.object
+###WEEKDAYS
 
-###set a default position (due to me forgeting to set the origin and location before the export)
-inner_circle.location = [0,0,0]
-###append into array
-inner_circles.append(inner_circle)
+bpy.context.object.select_set(False)
+
+objectToSelect = bpy.data.objects[weekday_text.name]
+objectToSelect.select_set(True)    
+bpy.context.view_layer.objects.active = objectToSelect
+
+###weekday texts
+for i in range(6):
+    bpy.ops.object.duplicate()
+    swt = bpy.context.object
+    weekdays_texts.append(swt)
+    swt.location = circle_locations[i+1]
+    swt.location[1] += weekday_text_loc_y
+    
+###MAIN DAY CIRCLES
+
+bpy.context.object.select_set(False)
+
+objectToSelect = bpy.data.objects[circle_outer_day_main.name]
+objectToSelect.select_set(True)    
+bpy.context.view_layer.objects.active = objectToSelect
 
 for i in range(6):
-    bpy.ops.object.duplicate(linked=False)
-    new_circle = bpy.context.object
-    inner_circles.append(new_circle)
+    bpy.ops.object.duplicate()
+    smnc = bpy.context.object
+    circles_outer_day.append(smnc)
+    smnc.location = circle_locations[i+1]
 
-#####################
-#INNER NIGHT CIRCLES#
-#####################
+###SECONDARY DAY CIRCLES
 
-inner_circles_night = []
-###import the circle object
-bpy.ops.wm.obj_import(filepath=path+'/objs/Night_Day_Circle_Inner.obj')
-###store the circle object
-inner_circle_night = bpy.context.object
+bpy.context.object.select_set(False)
 
-###set a default position (due to me forgeting to set the origin and location before the export)
-inner_circle_night.location = [0,0,0]
-###append into array
-inner_circles_night.append(inner_circle_night)
+objectToSelect = bpy.data.objects[circle_inner_day_main.name]
+objectToSelect.select_set(True)    
+bpy.context.view_layer.objects.active = objectToSelect
 
 for i in range(6):
-    bpy.ops.object.duplicate(linked=False)
-    new_circle = bpy.context.object
-    inner_circles_night.append(new_circle)
+    bpy.ops.object.duplicate()
+    ssdc = bpy.context.object
+    circles_inner_day.append(ssdc)
+    ssdc.location = circle_locations[i+1]
 
+####MAIN NIGHT CIRCLES
 
-###place circles and append material to them (NOTE NO MAT SLOTS IS PREFERED)
-for i in range(7):
-    ###MAIN CIRCLES
-    material = bpy.data.materials.get('Circle_Mat')
-    circles[i].location = circle_locations[i]
-    circles[i].data.materials.append(material)
-    ###MAIN INNER CIRCLES
-    inner_circles[i].location = circle_locations[i]
-    inner_circles[i].location[2] -= 0.01
-    ###NIGHT INNER CIRCLES
-    inner_circles_night[i].location = circle_locations[i]
-    inner_circles_night[i].scale = night_inner_scale
-    inner_circles_night[i].location[0] -= night_inner_loc[0]
-    inner_circles_night[i].location[1] -= night_inner_loc[1]
-    inner_circles_night[i].location[2] -= 0.1
-        
-for i in range(int(7)):
-    textObjs[i].location = circle_locations[i]
-    textObjs[i].location[1] += 1.3
-###create and do the same thing to the other circles
+bpy.context.object.select_set(False)
 
-for i in range(7):
-    bpy.ops.object.text_add()
-    tempObj = bpy.context.object
-    tempObj.data.body = str(allDays[i])
-    tempObj.data.align_x = 'CENTER'
-    tempObj.data.align_y = 'CENTER'
-    tempObj.location = circle_locations[i]
+objectToSelect = bpy.data.objects[circle_outer_night_main.name]
+objectToSelect.select_set(True)    
+bpy.context.view_layer.objects.active = objectToSelect
+
+for i in range(6):
+    bpy.ops.object.duplicate()
+    smnc = bpy.context.object
+    circles_outer_night.append(smnc)
+    smnc.location = circle_locations[i+1]
+
+####SECONDARY DAY CIRCLES
+
+bpy.context.object.select_set(False)
+
+objectToSelect = bpy.data.objects[circle_inner_night_main.name]
+objectToSelect.select_set(True)    
+bpy.context.view_layer.objects.active = objectToSelect
+
+for i in range(6):
+    bpy.ops.object.duplicate()
+    ssnc = bpy.context.object
+    circles_inner_night.append(ssnc)
+    ssnc.location = circle_locations[i+1]
+    
+####DAY TEXT CIRCLES
+
+bpy.context.object.select_set(False)
+
+objectToSelect = bpy.data.objects[day_text.name]
+objectToSelect.select_set(True)    
+bpy.context.view_layer.objects.active = objectToSelect
+
+for i in range(6):
+    bpy.ops.object.duplicate()
+    dt = bpy.context.object
+    bpy.ops.object.origin_set = 'ORIGIN_GEOMETRY'
+    day_texts.append(dt)
+    dt.location = circle_locations[i+1]
+    
+####NIGHT TEXT CIRCLES
+
+bpy.context.object.select_set(False)
+
+objectToSelect = bpy.data.objects[night_text.name]
+objectToSelect.select_set(True)    
+bpy.context.view_layer.objects.active = objectToSelect
+
+for i in range(6):
+    bpy.ops.object.duplicate()
+    nt = bpy.context.object
+    bpy.ops.object.origin_set = 'ORIGIN_GEOMETRY'
+    night_texts.append(nt)
+    nt.location = circle_locations[i+1]
+    nt.location[0] += night_text_loc[0]
+    nt.location[1] += night_text_loc[1]
     
 for i in range(7):
-    bpy.ops.object.text_add()
-    tempObj = bpy.context.object
-    tempObj.data.body = str(allNights[i])
-    tempObj.data.align_x = 'CENTER'
-    tempObj.data.align_y = 'CENTER'
-    tempObj.location = circle_locations[i]
-    tempObj.location[0] += nights_loc[0]
-    tempObj.location[1] += nights_loc[1]
-    tempObj.scale = [0.8,0.8,0.8]
+    weekdays_texts[i].data.body = weekdays[i]
     
-bpy.ops.object.light_add(type='SUN')
+for i in range(7):
+    day_texts[i].data.body = str(allDays[i])
+    
+for i in range(7):
+    night_texts[i].data.body = str(allNights[i])
+    
+  #################
+ ###################
+#####################
+#MATERIAL_MANAGEMENT#
+#####################
+ ###################
+  #################
+  
+  ###################
+ #####################
+#######################
+#BACKGROUND_MANAGEMENT#
+#######################
+ #####################
+  ###################
