@@ -5,6 +5,7 @@ import json
 import requests
 import datetime
 from datetime import date
+import os
 import os.path
 from os.path import exists
 from os.path import dirname
@@ -21,7 +22,8 @@ bpy.ops.object.delete()
 bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
 
 ###get the parent directory path
-path = dirname(dirname(__file__))
+path = '/home/zainerikat/Desktop/blender/json'
+render_path = path+'/renders/output'
 
 ###filename = the date in YYY-MM-DD format
 filename = date.today().strftime('%Y_%d_%m') + '.json'
@@ -50,13 +52,20 @@ with open(fullPath,'r') as file:
 weekdays = []
 allDays = []
 allNights = []
-mat_names = []
+day_mats = []
+night_mats = []
 for x in jsonRes:
     dayTemp = jsonRes[x]['times']['all_day']['temperature']['value']
     nightTemp = jsonRes[x]['times']['all_night']['temperature']['value']
-    mats = [jsonRes[x]['times']['all_day']['color']['value'],
-    jsonRes[x]['times']['all_night']['color']['value']]
-    mat_names.append(mats)
+    ###
+    day_mat = jsonRes[x]['times']['all_day']['color']['value']['name']
+    day_mats.append(day_mat)
+    print('day: '+ day_mat)
+    ###
+    night_mat = jsonRes[x]['times']['all_night']['color']['value']['name']
+    night_mats.append(night_mat)
+    print('night: '+ night_mat)
+    ###
     allDays.append(dayTemp)
     allNights.append(nightTemp)
     x = x.split('-')
@@ -65,6 +74,11 @@ for x in jsonRes:
     day = int(x[2])
     wd = datetime.date(year,month,day)
     weekdays.append(wd.strftime("%A"))
+
+
+bpy.ops.object.light_add(type='SUN')
+sun = bpy.context.object
+sun.data.energy = 5.0
 
 ###set the render resolution
 bpy.data.scenes['Scene'].render.resolution_x = 1080
@@ -245,7 +259,7 @@ bpy.context.view_layer.objects.active = objectToSelect
 for i in range(6):
     bpy.ops.object.duplicate()
     dt = bpy.context.object
-    bpy.ops.object.origin_set = 'ORIGIN_GEOMETRY'
+    ###bpy.ops.object.origin_set = 'ORIGIN_GEOMETRY'
     day_texts.append(dt)
     dt.location = circle_locations[i+1]
     
@@ -275,6 +289,10 @@ for i in range(7):
 for i in range(7):
     night_texts[i].data.body = str(allNights[i])
     
+### mat test
+
+
+    
   #################
  ###################
 #####################
@@ -283,6 +301,12 @@ for i in range(7):
  ###################
   #################
   
+for i in range(7):
+    day_m = bpy.data.materials.get(day_mats[i])
+    circles_inner_day[i].data.materials.append(day_m)
+    night_m = bpy.data.materials.get(night_mats[i])
+    circles_inner_night[i].data.materials.append(night_m)
+  
   ###################
  #####################
 #######################
@@ -290,3 +314,21 @@ for i in range(7):
 #######################
  #####################
   ###################
+  
+bpy.ops.mesh.primitive_plane_add()
+plane = bpy.context.object
+
+plane.scale = (15,15,15)
+plane.location[2] = -.5
+
+mat = bpy.data.materials.get('background')
+
+plane.data.materials.append(mat)
+  
+###render the final output
+bpy.context.scene.render.filepath = render_path
+bpy.context.scene.render.film_transparent = True
+bpy.context.scene.render.film_transparent = True
+bpy.context.scene.render.use_overwrite = False
+bpy.context.scene.camera = camera
+bpy.ops.render.render(use_viewport=True,write_still=True)
